@@ -1,0 +1,6 @@
+<?php
+/**
+ * @file typogrify.install
+ * Upgrade hooks for the Typogrify module.
+ */
+

@@ -1,0 +1,33 @@
+; ----
+; ---- Name and description
+; ----
+
+name 																						= Helloper Admin
+description 																		= A sub theme to Seven.
+
+
+; ----
+; ---- Core and base theme
+; ----
+
+package                                         = Kollegorna
+core       																			= 7.x
+engine                                          = "phptemplate"
+version                                         = 7.0
+base theme 																			= seven
+
+
+; ----
+; ---- Stylesheets
+; ----
+
+; Screen
+stylesheets[screen][] 													= css/helloperadmin.css
+
+
+; ----
+; ---- Javascripts
+; ----
+
+scripts[] 																			= js/helloperadmin.js
+

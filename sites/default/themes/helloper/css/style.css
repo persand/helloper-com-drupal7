@@ -1,0 +1,316 @@
+/**
+ * Styles extending the global styles (globals.css)
+ *
+ * 1. Headings
+ * 2. Text
+ * 3. Forms
+ * 4. Boxes
+ * 5. UI components
+ * 6. Articles
+ * 7. Footer
+ * 8. Pages/sections
+ * 9. Misc
+ */
+
+/** HEADINGS ---------- */
+
+/**
+ * Headline
+ *
+ * A big headline on display
+ */
+
+.headline {
+  margin: 0 0 2.5em;
+}
+
+.headline a:hover {
+  background: none;
+}
+
+.headline h1,
+.headline h2 {
+  border-bottom: 0.111em solid #33b4da;
+  display: inline;
+  font-size: 3.6em; /* 64px */
+  font-weight: 700;
+  letter-spacing: -2px;
+  line-height: normal;
+}
+
+/**
+ * Sub heading
+ */
+
+.subheading {
+  color: #666;
+}
+
+h1 + h2.subheading {
+  margin-top: -0.75em;
+}
+
+
+/** TEXT ---------- */
+/**
+ * Text formatting
+ *
+ * Various text formats without any semantic meaning.
+ */
+
+.intro {
+  font-size: 1.2em; /* 24px */
+  line-height: 1.3333; /* 32px */
+  margin: .5em 0; /* 12px */
+}
+
+.meta {
+  color: #888;
+  font-size: 0.6em; /* 12px */
+  line-height: 1.666;
+  margin: 0 0 1em;
+  text-transform: uppercase;
+}
+
+/** FORMS ---------- */
+
+.form-item .description {
+  color: #888;
+}
+
+/** BOXES ---------- */
+/**
+ * Boxing content with a background color
+ */
+
+.note,
+.highlight,
+.promo,
+.warning {
+  margin: 1.25em 0;
+  padding: 1.25em;
+}
+
+.note a,
+.highlight a,
+.promo a,
+.warning a {
+  text-decoration: underline;
+}
+
+.note a:hover,
+.highlight a:hover,
+.promo a:hover,
+.warning a:hover {
+  background: inherit;
+  color: inherit;
+}
+
+.note p:last-child,
+.highlight p:last-child,
+.promo p:last-child,
+.warning p:last-child {
+  margin-bottom: 0;
+}
+
+.note {
+  background: #ececec;
+}
+
+.note a,
+.highlight a {
+  color: #000;
+}
+
+.highlight {
+  background: #B5D5FF;
+}
+
+.highlight ::-moz-selection {
+  background: #fff;
+  color: #000;
+}
+
+.highlight ::selection {
+  background: #fff;
+  color: #000;
+}
+
+.promo {
+  background: #333;
+  color: #fff;
+}
+
+.warning {
+  background: #F2594B;
+  color: #fff;
+}
+
+.promo a,
+.warning a {
+  color: #fff;
+}
+
+/** 5. UI COMPONENTS ---------- */
+
+/**
+ * Pager
+ */
+.pager {
+  display: inline-block;
+  list-style: none;
+  margin: 0;
+  width: 100%;
+}
+
+.pager li {
+  display: inline;
+}
+
+.pager a,
+.pager .pager-current {
+  background: #ececec;
+  border-radius: 50%;
+  color: #000;
+  display: inline-block;
+  height: 40px;
+  line-height: 40px;
+  margin: 0 15px 0 0;
+  text-align: center;
+  width: 40px;
+}
+
+.pager .pager-current {  
+  display: none;
+}
+
+.pager a:hover {
+  background: #33B4DA;
+  color: #fff;
+}
+
+.pager .last {
+  float: right;
+}
+
+.pager .last a {
+  margin: 0;
+}
+
+/**
+ * Tasks
+ *
+ * Drupal tasks menu
+ */
+
+.tasks {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.main:hover .tasks {
+  display: block;
+}
+
+.tasks li {
+  display: inline;
+}
+
+.tasks li a {
+  display: inline-block;
+  margin: 0 0 0 10px;
+}
+
+/** 6. ARTICLES ---------- */
+/**
+ * Posts, notes and pages
+ */
+
+.article {
+  padding: 1.25em 0 5em;
+}
+
+.article header time {
+  display: block;
+  margin-bottom: 0.6em;
+}
+
+.article-type-note header {
+  padding: 0 0 1.25em;
+}
+
+.article-type-note header h1 {
+  border-bottom: 4px solid #33B4DA;
+  color: #92ccea;
+  display: inline;
+  font-size: 1.6em;
+  letter-spacing: normal;
+  line-height: 1.1875;
+}
+
+.article-type-note header h1 a {
+  color: #000;
+  font-weight: 800;
+}
+
+.field-name-field-tags div {
+  display: inline-block;
+}
+
+.field-name-field-tags .field-item {
+  padding-right: 0.3em;
+}
+
+/** 7. FOOTER ---------- */
+
+.footer {
+  margin-top: 12em;
+  padding: 3em 0;
+}
+
+/** 8. PAGES/SECTIONS ---------- */
+/**
+ * Page/section specific styles
+ *
+ * Sections with large amounts of CSS should use one or more specific CSS
+ * files placed in the app/ directory.
+ */
+
+/**
+ * Front
+ */
+.front-pager {
+  padding-top: 5em;
+}
+
+.front .header {
+  padding-bottom: 1.5em;
+}
+
+/** 9. MISC ---------- */
+/**
+ * Misc stuff. Just don't be lazy and put too much here…
+ */
+
+/**
+ * Hide ugly Drupal grippie
+ */
+.grippie {
+  display: none;
+}
+
+/**
+ * Adjust toolbar position if admin menu is active
+ */
+.admin_menu div#toolbar {
+  top: 30px;
+}
+
+/**
+ * Hide the oEmbed title
+ */
+.oembed-title {
+  display: none;
+}

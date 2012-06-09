@@ -1,0 +1,61 @@
+; ----
+; ---- Name and description
+; ----
+
+name 																						= Helloper
+description 																		= A sub theme to the Kollegorna base theme.
+
+
+; ----
+; ---- Screenshot
+; ----
+
+screenshot 																			= screenshot.png
+
+
+; ----
+; ---- Core and base theme
+; ----
+
+package                                         = Kollegorna
+core       																			= 7.x
+engine                                          = "phptemplate"
+version                                         = 7.0
+
+
+; ----
+; ---- Stylesheets
+; ----
+
+; Screen
+stylesheets[screen][]                           = css/vendor/normalize.css
+stylesheets[screen][]                           = css/globals.css
+stylesheets[screen][]                           = css/vendor/foundation/grid.css
+stylesheets[screen][] 													= css/style.css
+stylesheets[screen][]                           = css/ie.css
+stylesheets[screen][]                           = css/print.css
+
+; ----
+; ---- Javascripts
+; ----
+
+scripts[]                                       = js/vendor/jquery.scrolldepth.min.js
+scripts[]																				= js/vendor/mobile-boilerplate/helper.min.js
+scripts[]																				= js/plugins.min.js
+scripts[] 																			= js/script.min.js
+
+
+; ----
+; ---- Regions
+; ----
+
+regions[content]																= Content
+regions[footer]         												= Footer
+regions[help]                                   = Help
+regions[page_top]                               = Page top
+regions[page_bottom]                            = Page bottom
+
+; Hidden regions
+regions_hidden[]                                = page_top
+regions_hidden[]                                = page_bottom
+

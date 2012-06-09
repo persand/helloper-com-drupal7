@@ -1,0 +1,496 @@
+<?php
+
+/**
+ * @file
+ * Drupal Status module main file
+ *
+ * It is responsible for handling most of the request which
+ * are not administrative tasks.
+ */
+
+define('DRUPAD_CURRENT_VERSION', '1.4');
+
+/**
+ * Implements of hook_menu
+ */
+function drupad_menu() {
+  $items = array();
+
+  // Module settings
+  $items['admin/config/system/drupad'] = array(
+    'title' => 'Drupad',
+    'description' => 'Configure Drupad',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('drupad_settings_form'),
+    'access arguments' => array('administer Drupad'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'drupad.admin.inc',
+  );
+
+  // Special callback to check config
+  $items['drupad/check-config/%'] = array(
+    'page callback' => 'drupad_check_config',
+    'page arguments' => array(2),
+    'access callback' => 'drupad_authorize',
+    'type' => MENU_CALLBACK,
+  );
+
+  // Items for the client application, those are based
+  // on module capacity to serve those services (modules presence)
+  // and also settings defined by the administrator
+  $items += drupad_generate_menu_callbacks();
+
+  return $items;
+}
+
+/**
+ * Implements of hook_permission()
+ */
+function drupad_permission() {
+  return array(
+    'administer Drupad' => array(
+      'title' => t('Administer Drupad'),
+      'description' => t('Configure features enabled for Drupad application.'),
+    ),
+    'use Drupad application' => array(
+      'title' => t('Use Drupad application'),
+      'description' => t('Access the website from Drupad application.'),
+    ),
+    'create / edit content with Drupad' => array(
+      'title' => t('Create and/or edit content from Drupad iOS app'),
+      'description' => NULL,
+    ),
+  );
+}
+
+/**
+ * Check wether the current user can access Drupad module callbacks
+ *
+ * This check is made upon each single request
+ *
+ * @return boolean
+ */
+function drupad_authorize() {
+  global $user;
+
+  // First check that the client is Drupad
+  if (!strstr($_SERVER['HTTP_USER_AGENT'], 'Drupad')) {
+    return FALSE;
+  }
+
+  // Extract credentials from the request
+  $credentials = drupad_extract_credentials();
+
+  // If the user is anonymous try to log her
+  if ($user->uid == 0 || $user->name != $credentials['login']) {
+    // Be sure the user isn't blocked or denied by some rules
+    if (user_is_blocked($credentials['login']) || drupal_is_denied('user', $credentials['login'])) {
+      drupad_unauthorized();
+    }
+    // Authenticate the user
+    elseif ($uid = user_authenticate($credentials['login'], $credentials['pass'])) {
+      $user = user_load($uid);
+      $edit = array();
+      // Record session
+      user_login_finalize($edit);
+    }
+    else {
+      // Not authorized
+      drupad_unauthorized();
+    }
+  }
+
+  if ($user->uid == 1) {
+    return TRUE;
+  }
+
+  if (user_access('use Drupad application')) {
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+/**
+ * Extracts credentials from the request
+ *
+ * @return Array keyed with 'login' and 'pass'
+ */
+function drupad_extract_credentials() {
+  if (isset($_SERVER['PHP_AUTH_USER']) && isset($_SERVER['PHP_AUTH_PW'])) {
+    $name = $_SERVER['PHP_AUTH_USER'];
+    $pass = $_SERVER['PHP_AUTH_PW'];
+  }
+  elseif (isset($_GET['HTTP_AUTHORIZATION'])) {
+    list($name, $pass) = drupad_parse_header($_GET['HTTP_AUTHORIZATION']);
+  }
+  elseif (!isset($_GET['HTTP_AUTHORIZATION']) && isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+    list($name, $pass) = drupad_parse_header($_SERVER['REDIRECT_HTTP_AUTHORIZATION']);
+  }
+  elseif (!isset($_GET['HTTP_AUTHORIZATION']) && !isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION']) && isset($_GET['login'])) {
+    list($name, $pass) = drupad_parse_header($_GET['login']);
+  }
+
+  $name = isset($name) ? $name : NULL;
+  $pass = isset($pass) ? $pass : NULL;
+
+  return array('login' => $name, 'pass' => $pass);
+}
+
+/**
+ * Set 401 Unauthorized status and WWW-Authenticate header.
+ */
+function drupad_unauthorized() {
+  require_once('includes/common.inc');
+  require_once('includes/unicode.inc');
+
+  $site_name = trim(variable_get('site_name', 'drupal'));
+  $realm = mime_header_encode($site_name);
+
+  drupal_add_http_header("HTTP/1.0", "401 Unauthorized");
+  drupal_add_http_header("WWW-Authenticate", "Basic realm=\"$realm\"");
+
+  // User is logged in, so delete her session
+  if (!user_is_anonymous()) {
+    global $user;
+    watchdog('user', 'Session closed for %name.', array('%name' => $user->name));
+    // Destroy the current session:
+    session_destroy();
+    // Only variables can be passed by reference workaround.
+    $null = NULL;
+    user_module_invoke('logout', $null, $user);
+    // Load the anonymous user
+    $user = drupal_anonymous_user();
+  }
+  print $site_name;
+  die();
+}
+
+/**
+ * Parse an HTTP authorization header.
+ */
+function drupad_parse_header($header) {
+  list($type, $credentials) = split(' ', $header);
+  if ($type == 'Basic') {
+    return explode(':', base64_decode($credentials));
+  }
+}
+
+/**
+ * Module response server
+ *
+ * The module response server is responsible for taking an array
+ * containing information that should be sent back to the client
+ * application.
+ *
+ * The response server is also responsible for determining if
+ * a proper JSON encoder is available, and if not includes the
+ * required libraries to actually send a proper formatted JSON
+ * reponse.
+ *
+ * @param $data
+ *   An associative array containing every element needed by the client
+ *   application. Usually made of two sub arrays 'meta' and 'content'.
+ */
+function drupad_serve_response($data) {
+  $messages = drupal_get_messages(NULL, TRUE);
+
+  drupal_add_http_header('Content-Type', 'text/plain; charset=utf-8');
+
+  $data = json_encode($data);
+
+  if (extension_loaded('deflate')) {
+    $data = gzdeflate($data, 9);
+  }
+
+  print $data;
+  die();
+}
+
+/**
+ * @param $application_version
+ *   The client application version number extracted
+ *   from the HTTP request arg(2)
+ *
+ * @return
+ *   An associative array containing the current module version
+ *   and available services that the application can implement
+ *   with callback to access those features.
+ *
+ * @see drupad_serve_response()
+ */
+function drupad_check_config($application_version = NULL) {
+  if (!$application_version) {
+    drupal_not_found();
+  }
+
+  $data = $callbacks = $modules = $permissions = array();
+
+  // The current version of the module
+  $data['meta']['version'] = DRUPAD_CURRENT_VERSION;
+  $data['meta']['drupal_version'] = VERSION;
+  $data['content'] = array();
+
+  if (($data['meta']['version_match'] = drupad_version_match(DRUPAD_CURRENT_VERSION, $application_version)) === TRUE) {
+
+    $available_callbacks = drupad_available_callbacks($only_available = TRUE);
+
+    foreach ($available_callbacks as $callback => $item) {
+      // Only if this callback is enabled
+      if ( (bool) variable_get('drupad_callback_' . $callback, 1) === TRUE) {
+        $callbacks[] = $callback;
+        foreach ($item['modules'] as $module) {
+          $modules[] = $module;
+        }
+
+        // Check for optional modules
+        if (isset($item['modules_optional']) && is_array($item['modules_optional']) && count($item['modules_optional']) > 0) {
+          foreach ($item['modules_optional'] as $module) {
+            if (module_exists($module)) {
+              $modules[] = $module;
+            }
+          }
+        }
+
+        // Check for needed permissions
+        if (is_array($item['permissions']) && count($item['permissions']) > 0) {
+          foreach ($item['permissions'] as $perm) {
+            if (user_access($perm)) {
+              $permissions[] = $perm;
+            }
+          }
+        }
+
+      }
+    }
+    $data['content']['callbacks'] = $callbacks;
+    $data['content']['modules'] = array_values(array_unique($modules));
+    $data['content']['permissions'] = array_values(array_unique($permissions));
+  }
+
+  drupad_serve_response($data);
+}
+
+/**
+ * Determine if the client application and the module are compatible
+ *
+ * Base on the 2 version numbers, the function will determine if
+ * the client application is compatible with the current version
+ * of the module.
+ *
+ * @param $module_version
+ *
+ * @param $application_version
+ *
+ * @return BOOLEAN
+ */
+function drupad_version_match($module_version, $application_version) {
+  // Lists application version compatible with this version
+  // of the module.
+  $application_versions_for_module = array($module_version);
+
+  return in_array($application_version, $application_versions_for_module);
+}
+
+/**
+ * @return Available services implemented by
+ *  by the module (most of the time, module name)
+ */
+function drupad_available_callbacks($only_available = FALSE) {
+  $callbacks = array();
+
+  $callbacks['comments'] = array(
+    'title' => t('Comments'),
+    'description' => t('View, post and moderate comments. You must have the <strong>Comment</strong> module enabled. Used permissions: <strong>access comments</strong>, <strong>administer comments</strong>, <strong>post comments</strong>, <strong>post comments without approval</strong>.'),
+    'modules' => array('comment'),
+    'modules_optional' => array('mollom'),
+    'permissions' => array('access comments', 'administer comments', 'post comments', 'post comments without approval'),
+    'section' => 'Content',
+    'has_pager' => TRUE,
+  );
+
+  $callbacks['content'] = array(
+    'title' => t('Content'),
+    'description' => t('View content, moderate, delete content and change content sticky and promoted state. Used permissions: <strong>access content</strong>, <strong>administer nodes</strong>.'),
+    'modules' => array('node'),
+    'modules_optional' => array('mollom'),
+    'permissions' => array('access content', 'administer nodes'),
+    'section' => 'Content',
+    'has_pager' => TRUE,
+  );
+
+  $callbacks['content-forms'] = array(
+    'title' => t('Create / edit nodes'),
+    'description' => '<strong>Experimental:</strong> ' . t('Create and/or edit nodes. Used permission: <strong>create / edit content with Drupad</strong>.'),
+    'modules' => array('node'),
+    'modules_optional' => array('field'),
+    'permissions' => array('create / edit content with Drupad'),
+    'section' => 'Content',
+    'has_pager' => FALSE,
+  );
+
+  $callbacks['users'] = array(
+    'title' => t('Users'),
+    'description' => t('Active, block and delete users. Used permission: <strong>administer users</strong>.'),
+    'modules' => array('user'),
+    'permissions' => array('administer users'),
+    'section' => 'Content',
+    'has_pager' => TRUE,
+  );
+
+  $callbacks['updates'] = array(
+    'title' => t('Available updates'),
+    'description' => t('List projects status and display available updates plus security warnings. You must have the <strong>Update status</strong> module enabled. Used permission: <strong>administer site configuration</strong>.'),
+    'modules' => array('update'),
+    'permissions' => array('administer site configuration'),
+    'section' => 'System',
+  );
+
+  $callbacks['status-report'] = array(
+    'title' => t('Status report'),
+    'description' => t('Gives an overview of your Drupal installation health. Used permission: <strong>administer site configuration</strong>.'),
+    'modules' => array('system'),
+    'permissions' => array('administer site configuration'),
+    'section' => 'System',
+  );
+
+  $callbacks['offline'] = array(
+    'title' => t('Maintenance mode'),
+    'description' => t('Allows your to turn your site offline. Used permission: <strong>administer site configuration</strong>.'),
+    'modules' => array('system'),
+    'permissions' => array('administer site configuration'),
+    'section' => 'System',
+  );
+
+  $callbacks['cron-tasks'] = array(
+    'title' => t('Cron'),
+    'description' => t('Launch cron tasks. Used permission: <strong>administer site configuration</strong>.'),
+    'modules' => array('system'),
+    'permissions' => array('administer site configuration'),
+    'section' => 'System',
+  );
+
+  $callbacks['dblog'] = array(
+    'title' => t('Recent log entries'),
+    'description' => t('View recent log entries. You must have the <strong>Database logging</strong> module enabled. Used permission: <strong>access site reports</strong>.'),
+    'modules' => array('dblog'),
+    'permissions' => array('access site reports'),
+    'section' => 'System',
+  );
+
+  $callbacks['backup'] = array(
+    'title' => t('Backup'),
+    'description' => t('Perform a database backup of your site. You must have the <strong>Backup and Migrate</strong> module installed and enabled. Used permission: <strong>perform backup</strong>.'),
+    'modules' => array('backup_migrate'),
+    'permissions' => array('perform backup'),
+    'section' => 'System',
+  );
+
+  $callbacks['cache'] = array(
+    'title' => t('Clear cache'),
+    'description' => t('Flush all caches.'),
+    'modules' => array('system'),
+    'permissions' => array('administer site configuration'),
+    'section' => 'System',
+  );
+
+  foreach ($callbacks as $callback => $service) {
+    foreach ($service['modules'] as $module) {
+      if (!module_exists($module)) {
+        if ($only_available) {
+          unset($callbacks[$callback]);
+          continue;
+        }
+        else {
+          $callbacks[$callback]['disabled'] = TRUE;
+          continue;
+        }
+      }
+    }
+  }
+
+  return $callbacks;
+}
+
+/**
+ * Formats every callback into a suitable Drupal menu item
+ *
+ * @return associative array of menu items
+ */
+function drupad_generate_menu_callbacks() {
+  $items = array();
+
+  foreach (drupad_available_callbacks($only_available = TRUE) as $callback => $item) {
+    if ( (bool) variable_get('drupad_callback_' . $callback, 1) === TRUE) {
+      $page_callback = str_replace('/%', '', $callback);
+      $page_callback = str_replace(array('/', '-'), '_', $page_callback);
+
+      $items['drupad/' . $callback] = $item;
+      $items['drupad/' . $callback]['page callback'] = 'drupad_' . $page_callback;
+      $items['drupad/' . $callback]['access callback'] = 'drupad_authorize';
+      $items['drupad/' . $callback]['file'] = 'includes/' . $page_callback . '.inc';
+      $items['drupad/' . $callback]['type'] = MENU_CALLBACK;
+    }
+  }
+
+  return $items;
+}
+
+/**
+ * Request the Drupad module check config callback.
+ *
+ * This allows us to test the Drupal configuration without the app.
+ */
+function drupad_request_config_callback($form, $form_state) {
+  $url = url('drupad/check-config/' . DRUPAD_CURRENT_VERSION, array('absolute' => TRUE));
+
+  $login = $form_state['values']['test_login'];
+  $pass  = $form_state['values']['test_password'];
+
+  $headers = array(
+    'User-Agent' => 'Drupad testing client',
+    'Authorization' => 'Basic ' . base64_encode($login . ':' . $pass),
+  );
+
+  $response = drupal_http_request($url, array('headers' => $headers));
+
+  $site_name = trim(variable_get('site_name', 'drupal'));
+
+  $output = '';
+
+  $json_string = $response->data;
+  $json_object = json_decode($json_string);
+
+  if ($response->code ==  200 && NULL !== $json_object && $json_object->meta->version_match == TRUE) {
+    $output .= "<strong style='color: green'>" . t("Drupad seems to work OK!") . "</strong><br />";
+    $output .= "<strong>HTTP code:</strong> " . $response->code . "<br />";
+    $output .= "<strong>Valid JSON:</strong> " . $json_string . "<br />";
+  }
+  elseif ($response->code ==  200 && NULL !== $json_object) {
+    $output .= "<strong style='color: red'>" . t("JSON response is well formatted, but lakes information") . "</strong><br />";
+    $output .= "<strong>HTTP code:</strong> " . $response->code . "<br />";
+    $output .= "<strong>Expected version_match parameter to be TRUE:</strong> " . $json_string . "<br />";
+  }
+  elseif ($response->code ==  200 && NULL === json_decode($json_string)) {
+    $output .= "<strong style='color: red'>" . t("Drupad couldn't parse the response!") . "</strong><br />";
+    $output .= "<strong>HTTP code:</strong> " . $response->code . "<br />";
+    $output .= "<strong style='color: red'>Not valid JSON:</strong> " . $json_string . "<br />";
+  }
+  elseif ($response->code == 401 && $json_string == $site_name) {
+    $output .= "<strong style='color: red'>" . t('Drupad failed to authenticate') . "</strong><br />";
+    $output .= "<strong>HTTP code:</strong> " . $response->code . "<br />";
+    $output .= "<strong>Authentification failed:</strong> check your login and password, please also check <a href='http://drupad.com/install.html'>Drupad support</a> if you are using PHP with CGI or FastCGI.\n";
+  }
+  elseif ($response->code == 403) {
+    $output .= "<strong>" . t("Access denied") . "</strong><br />";
+    $output .= "<strong>HTTP code:</strong> " . $response->code . "<br />";
+    $output .= "<strong>Reason:</strong> " . t('Provided credentials where not allowed to access this callback.') . "<br />";
+  }
+  else{
+    $output .= "<strong>" . t("Response") . "</strong><br />";
+    $output .= "<strong>HTTP code:</strong> " . $response->code . "<br />";
+    $output .= "<strong>Output:</strong> " . $json_string . "<br />";
+  }
+  return '<div id="drupal-debug-result">' . $output . '</div>';
+  die();
+}

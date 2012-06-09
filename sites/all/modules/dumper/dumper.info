@@ -1,0 +1,13 @@
+name = Dumper 
+description = Module designed to quickly download a database dump.
+core = 7.x
+
+files[] = dumper.install
+files[] = dumper.module
+
+; Information added by drupal.org packaging script on 2011-05-28
+version = "7.x-1.0-alpha1"
+core = "7.x"
+project = "dumper"
+datestamp = "1306621315"
+

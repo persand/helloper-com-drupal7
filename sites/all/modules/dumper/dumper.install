@@ -1,0 +1,24 @@
+<?php
+
+/**
+ * @file Dumper Module Installation file
+ */
+
+/**
+ * Implements hook_install().
+ */
+function dumper_install() {
+
+}
+
+
+/**
+ * Implements hook_uninstall().
+ * @todo list all variables
+ */
+function dumper_uninstall() {
+
+  variable_del('dumper_extra_options');
+  variable_del('dumper_exclude_users');
+  variable_del('dumper_exclude_cache');
+}

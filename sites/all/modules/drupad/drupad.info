@@ -1,0 +1,12 @@
+name = Drupad
+description = Drupad iPhone application connector
+package = Other
+core = 7.x
+
+files[] = drupad.module
+; Information added by drupal.org packaging script on 2012-01-04
+version = "7.x-1.8"
+core = "7.x"
+project = "drupad"
+datestamp = "1325671248"
+
