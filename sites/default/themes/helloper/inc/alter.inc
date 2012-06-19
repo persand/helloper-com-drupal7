@@ -3,8 +3,7 @@
 /**
  * Implementation of hook_css_alter()
  *
- * Specify either disallowed or allowed CSS files.
- * If neither are set all CSS files will be used.
+ * Cherry pick CSS files and load them properly into on file.
  */
 function helloper_css_alter(&$css) {
   $theme_path = drupal_get_path('theme', 'helloper');
@@ -44,7 +43,7 @@ function helloper_css_alter(&$css) {
 /**
  * Implementation of hook_js_alter()
  *
- * Remove some stuff and combine JS to just one file
+ * Load them properly into on file. 
  */
 function helloper_js_alter(&$javascript) {
   // Get path to my theme
