@@ -32,7 +32,6 @@ stylesheets[screen][]                           = css/vendor/normalize.css
 stylesheets[screen][]                           = css/globals.css
 stylesheets[screen][]                           = css/vendor/foundation/grid.css
 stylesheets[screen][] 													= css/style.css
-stylesheets[screen][]                           = css/ie.css
 stylesheets[screen][]                           = css/print.css
 
 ; ----
