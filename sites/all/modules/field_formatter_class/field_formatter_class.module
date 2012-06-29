@@ -12,6 +12,7 @@ function field_formatter_class_field_formatter_info_alter(&$info) {
   foreach ($info as $instance => $value) {
     $info[$instance]['settings'] += array(
       'field_formatter_class' => '', // This will be the class name for each field.
+      'field_formatter_class_remove_defaults' => '',
     );
   }
 }
@@ -28,7 +29,11 @@ function field_formatter_class_field_formatter_settings_summary_alter(&$summary,
   }
 
   if (!empty($settings['field_formatter_class'])) {
-    $summary .= t('Class: @field', array('@field' => filter_xss($settings['field_formatter_class'], array())));
+    if (!empty($settings['field_formatter_class_remove_defaults'])) {
+      $summary .= t('Class: @field (with default classes removed)', array('@field' => filter_xss($settings['field_formatter_class'], array())));
+    } else {
+      $summary .= t('Class: @field', array('@field' => filter_xss($settings['field_formatter_class'], array())));
+    }
   }
   else {
     $summary .= t('No class');
@@ -43,6 +48,13 @@ function field_formatter_class_field_formatter_settings_form_alter(&$settings_fo
     '#type' => 'textfield',
     '#title' => t('Field Formatter Class'),
     '#default_value' => $settings['field_formatter_class'],
+  );
+
+  $settings_form['field_formatter_class_remove_defaults'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Remove default classes'),
+    '#description' => t('By enabling this you will only use the class(es) above.'),
+    '#default_value' => $settings['field_formatter_class_remove_defaults'],
   );
 }
 
@@ -77,7 +89,7 @@ function field_formatter_class_formatter_info($field_name, $entity_type, $bundle
  * Implements hook_preprocess_field().
  *
  * Adds a custom field class to the field's classes_array
- * according to the field formatter settings. 
+ * according to the field formatter settings.
  */
 function field_formatter_class_preprocess_field(&$variables, $hook) {
   $field_name   = $variables['element']['#field_name'];
@@ -89,6 +101,10 @@ function field_formatter_class_preprocess_field(&$variables, $hook) {
 
   // add class for whole field
   if (!empty($formatter_info['field_formatter_class'])) {
+    if (!empty($formatter_info['field_formatter_class_remove_defaults'])) {
+      unset($variables['classes_array']);
+    }
+
     $variables['classes_array'][] = filter_xss($formatter_info['field_formatter_class'], array());
   }
 }
