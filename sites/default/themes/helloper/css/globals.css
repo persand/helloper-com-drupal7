@@ -31,6 +31,7 @@
  */
 
 html {
+  background: #f4f4f4;
   font: 400 100%/1.5 'nimbus-sans', 'Helvetica Neue', sans-serif; /* 16px */
   overflow-y: scroll;
   text-rendering: optimizeLegibility;
@@ -69,7 +70,7 @@ a:active {
   outline: none;
 }
 
-a:focus, 
+a:focus,
 a:hover {
   background: #000;
   color: #fff;
@@ -217,7 +218,7 @@ dfn {
   font-weight: 700;
 }
 
-abbr, 
+abbr,
 acronym {
   border-bottom: 1px dotted #222;
 }
@@ -313,7 +314,7 @@ kbd {
 
 /** 5. LISTS ---------- */
 
-li ul, 
+li ul,
 li ol {
   margin: 0 0 0.6em 1.2em; /* 0 0 12px 24px */
 }
@@ -460,8 +461,8 @@ label {
   margin: 0;
 }
 
-input, 
-textarea, 
+input,
+textarea,
 select {
   background: #FFF;
   border: 1px solid #ccc;
@@ -473,8 +474,8 @@ select {
   padding: 0.3em; /* 6px */
 }
 
-input:focus, 
-textarea:focus, 
+input:focus,
+textarea:focus,
 select:focus {
   border: 1px solid #aaa;
   box-shadow: inset 1px 1px 2px rgba(0, 0, 0, .2);
@@ -489,7 +490,7 @@ input[type=checkbox] {
 
 button {
   overflow: visible;
-  width: auto; 
+  width: auto;
 }
 
 button,
@@ -574,7 +575,7 @@ article { *zoom: 1; }
 
 /**
  * Clearfix
- * 
+ *
  * Credits:
  * http://nicolasgallagher.com/micro-clearfix-hack/
  */
