@@ -1,0 +1,94 @@
+<?php
+
+/**
+ * @file
+ * Provide for custom classes on field formatters in the display.
+ */
+
+/**
+ * Implements hook_field_formatter_info_alter().
+ */
+function field_formatter_class_field_formatter_info_alter(&$info) {
+  foreach ($info as $instance => $value) {
+    $info[$instance]['settings'] += array(
+      'field_formatter_class' => '', // This will be the class name for each field.
+    );
+  }
+}
+
+/**
+ * Implements hook_field_formatter_settings_summary_alter().
+ */
+function field_formatter_class_field_formatter_settings_summary_alter(&$summary, $context) {
+  $display = $context['instance']['display'][$context['view_mode']];
+  $settings = $display['settings'];
+
+  if (!empty($summary)) {
+    $summary .= '<br />';
+  }
+
+  if (!empty($settings['field_formatter_class'])) {
+    $summary .= t('Class: @field', array('@field' => filter_xss($settings['field_formatter_class'], array())));
+  }
+  else {
+    $summary .= t('No class');
+  }
+}
+
+function field_formatter_class_field_formatter_settings_form_alter(&$settings_form, $context) {
+  $display = $context['instance']['display'][$context['view_mode']];
+  $settings = $display['settings'];
+
+  $settings_form['field_formatter_class'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Field Formatter Class'),
+    '#default_value' => $settings['field_formatter_class'],
+  );
+}
+
+/**
+ * Get the formatter settings for a field instance and display.
+ *
+ * @param string $field_name
+ * @param string $display
+ * @param string $bundle
+ * @param string $display
+ *
+ * @return array
+ */
+function field_formatter_class_formatter_info($field_name, $entity_type, $bundle, $display) {
+
+  $info =_field_info_collate_fields();
+  // There is no bundle for this entity type so the bundle name is the
+  // entity_type name.
+  if (empty($bundle)) {
+    $bundle = $entity_type;
+  }
+
+  $field_display = $info['instances'][$entity_type][$bundle][$field_name]['display'];
+  $default = $field_display['default']['settings'];
+  if (isset($field_display[$display]['settings'])) {
+    return $field_display[$display]['settings'] + $default;
+  }
+  return $default;
+}
+
+/**
+ * Implements hook_preprocess_field().
+ *
+ * Adds a custom field class to the field's classes_array
+ * according to the field formatter settings. 
+ */
+function field_formatter_class_preprocess_field(&$variables, $hook) {
+  $field_name   = $variables['element']['#field_name'];
+  $entity_type  = $variables['element']['#entity_type'];
+  $bundle       = $variables['element']['#bundle'];
+  $display      = $variables['element']['#view_mode'];
+
+  $formatter_info = field_formatter_class_formatter_info($field_name, $entity_type, $bundle, $display);
+
+  // add class for whole field
+  if (!empty($formatter_info['field_formatter_class'])) {
+    $variables['classes_array'][] = filter_xss($formatter_info['field_formatter_class'], array());
+  }
+}
