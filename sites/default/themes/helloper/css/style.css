@@ -71,6 +71,11 @@ h1 + h2.subheading {
   text-transform: uppercase;
 }
 
+.tags span {
+  display: block;
+  padding-bottom: 0.4em
+}
+
 ul.tags {
   display: inline;
   list-style: none;

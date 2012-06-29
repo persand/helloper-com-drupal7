@@ -106,12 +106,10 @@
   <footer class="meta">
     <?php if (!empty($content['field_tags'])): ?>
       <div class="tags">
-        <div class="t" style="padding-bottom: 0.4em">Tagged with:&nbsp;</div>
+        <span>Tagged with:</span>
         <?php echo render($content['field_tags']); ?>
       </div>
     <?php endif; ?>
-
-    <?php echo render($content['links']); ?>
   </footer>
 </article>
 <!-- / #article-<?php echo $node->nid; ?> -->
