@@ -2,23 +2,47 @@
 
 /**
  * @file
- * This is an example outlining how a module can be used to display a
- * custom page at a given URL.
+ * Module file for page_example_module.
+ */
+
+/**
+ * @defgroup page_example Example: Page
+ * @ingroup examples
+ * @{
+ * This example demonstrates how a module can display a page at a given URL.
+ *
+ * It's important to understand how the menu system works in order to
+ * implement your own pages. See the Menu Example module for some insight.
+ *
+ * @see menu_example
  */
 
 /**
  * Implements hook_help().
  *
- * Throughout Drupal, hook_help() is used to display help text at the top of
- * pages. Some other parts of Drupal pages get explanatory text from these hooks
- * as well. We use it here to illustrate how to add help text to the pages your
- * module defines.
+ * Through hook_help(), a module can make documentation available to the user
+ * for the module as a whole or for specific paths. Where the help appears
+ * depends on the $path specified.
+ *
+ * In the first example below, the help text will appear on the simple page
+ * defined in hook_menu below in the region designated for help text.
+ *
+ * In the second example, the text will be available through the module page as
+ * a link beside the module or on the admin help page (admin/help) in the list
+ * of help topics using the name of the module. To specify help in the admin
+ * section use the module name in the path as in the second case below.
+ *
+ * @see hook_help()
  */
 function page_example_help($path, $arg) {
   switch ($path) {
-    case 'admin/help#simple':
-      // Here is some help text for a custom page.
-      return t('This sentence contains all the letters in the English alphabet.');
+    case 'examples/page_example/simple':
+      // Help text for the simple page registered for this path.
+      return t('This is help text for the simple page.');
+
+    case 'admin/help#page_example':
+      // Help text for the admin section, using the module name in the path.
+      return t('This is help text created in the page example\'s second case.');
   }
 }
 
@@ -46,25 +70,20 @@ function page_example_permission() {
 /**
  * Implements hook_menu().
  *
- * hook_menu() must be implemented to emit items to place in the main menu.
- * This is a required step for modules wishing to display their own pages,
- * because the process of creating the links also tells Drupal what
- * callback function to use for a given URL. The menu items returned
- * here provide this information to the menu system.
+ * Because hook_menu() registers URL paths for items defined by the function, it
+ * is necessary for modules that create pages. Each item can also specify a
+ * callback function for a given URL. The menu items returned here provide this
+ * information to the menu system.
  *
- * With the below menu definitions, URLs will be interpreted as follows:
+ * We will define some menus, and their paths will be interpreted as follows:
  *
- * If the user accesses http://example.com/?q=examples/page_example/simple, then
+ * If the user accesses http://example.com/?q=examples/page_example/simple,
  * the menu system will first look for a menu item with that path. In this case
  * it will find a match, and execute page_example_simple().
  *
  * If the user accesses http://example.com/?q=examples/page_example/arguments,
- * no match will be found, so the system will look for 'examples/page_example',
- * which exists, and that page will be displayed.
- *
- * If the user accesses http://example.com/?q=examples/page_example/arguments,
- * the menu system will find no explicit match so will fall back to execute
- * page_example_description().
+ * the menu system will find no explicit match, and will fall back to the
+ * closest match, 'examples/page_example', executing page_example_description().
  *
  * If the user accesses
  * http://example.com/?q=examples/page_example/arguments/1/2, the menu
@@ -75,15 +94,15 @@ function page_example_permission() {
  * examples/page_example/arguments/%/%. This time it finds a match, and so will
  * execute page_example_arguments(1, 2). Since the parameters are passed to
  * the function after the match, the function can do additional checking or
- * make use of them without resulting to the arg() function.
+ * make use of them before executing the callback function.
  *
- * The @link menu_example.module Menu Example @endlink provides extensive
- * examples for hook_menu().
+ * @see hook_menu()
+ * @see menu_example
  */
 function page_example_menu() {
 
   // This is the minimum information you can provide for a menu item. This menu
-  // item will be created in the default menu.
+  // item will be created in the default menu, usually Navigation.
   $items['examples/page_example'] = array(
     'title' => 'Page Example',
     'page callback' => 'page_example_description',
@@ -98,14 +117,14 @@ function page_example_menu() {
   );
 
   // By using the MENU_CALLBACK type, we can register the callback for this
-  // path but do not have the item show up in the menu; the admin is not allowed
-  // to enable the item in the menu, either.
+  // path without the item appearing in the menu; the admin cannot enable the
+  // item in the menu, either.
   //
-  // Notice that the 'page arguments' is an array of numbers. These will be
+  // Notice that 'page arguments' is an array of numbers. These will be
   // replaced with the corresponding parts of the menu path. In this case a 0
-  // would be replaced by 'example', a 1 by 'arguments', and like wise 2 and 3 will
-  // be replaced by what ever the user provides. These will be passed as
-  // arguments to the page_example_arguments() function.
+  // would be replaced by 'example', a 1 by 'page_example', and a 2 by
+  // 'arguments.' 3 and 4 will be replaced by whatever the user provides.
+  // These will be passed as arguments to the page_example_arguments() function.
   $items['examples/page_example/arguments/%/%'] = array(
     'page callback' => 'page_example_arguments',
     'page arguments' => array(3, 4),
@@ -116,11 +135,20 @@ function page_example_menu() {
   return $items;
 }
 
+/**
+ * Constructs a descriptive page.
+ *
+ * Our menu maps this function to the path 'examples/page_example'.
+ *
+ */
 function page_example_description() {
   return array('#markup' => t('The page_example provides two pages, "simple" and "arguments". The <a href="@simple_link">simple page</a> just returns a renderable array for display. The <a href="@arguments_link">arguments page</a> takes two arguments and displays them, as in @arguments_link', array('@simple_link' => url('examples/page_example/simple', array('absolute' => TRUE)), '@arguments_link' => url('examples/page_example/arguments/23/56', array('absolute' => TRUE)))));
 }
+
 /**
- * A simple page callback.
+ * Constructs a simple page.
+ *
+ * The simple page callback, mapped to the path 'examples/page_example/simple'.
  *
  * Page callbacks return a renderable array with the content area of the page.
  * The theme system will later render and surround the content in the
@@ -136,7 +164,9 @@ function page_example_simple() {
 /**
  * A more complex page callback that takes arguments.
  *
- * The arguments are passed in from the page URL. The in our hook_menu
+ * This callback is mapped to the path 'examples/page_example/arguments/%/%'.
+ *
+ * The % arguments are passed in from the page URL. In our hook_menu
  * implementation we instructed the menu system to extract the last two
  * parameters of the path and pass them to this function as arguments.
  *
@@ -145,6 +175,9 @@ function page_example_simple() {
  * list is left unrendered, and a #theme attached to it so that it can be
  * rendered as late as possible, giving more parts of the system a chance to
  * change it if necessary.
+ *
+ * Consult @link http://drupal.org/node/930760 Render Arrays documentation
+ * @endlink for details.
  */
 function page_example_arguments($first, $second) {
   // Make sure you don't trust the URL to be safe! Always check for exploits.
@@ -165,3 +198,6 @@ function page_example_arguments($first, $second) {
   );
   return $render_array;
 }
+/**
+ * @} End of "defgroup page_example".
+ */

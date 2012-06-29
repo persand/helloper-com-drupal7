@@ -6,7 +6,8 @@
  */
 
 /**
- * @defgroup ajax_examples AJAX Examples
+ * @defgroup ajax_example Example: AJAX
+ * @ingroup examples
  * @{
  * These examples show basic AJAX concepts.
  *
@@ -15,16 +16,17 @@
  * @link http://drupal.org/node/752056 AJAX Forms handbook page @endlink.
  *
  * The several examples here demonstrate basic AJAX usage.
- * @}
-*/
+ */
+
+// The Node Form Alter example needs to be in another file.
+module_load_include('inc', 'ajax_example', 'ajax_example_node_form_alter');
 
 /**
  * Implements hook_menu().
  *
  * Sets up calls to drupal_get_form() for all our example cases.
  *
- * See @link menu_example.module Menu Example @endlink for more details on
- * hook_menu().
+ * @see menu_example.module for more details on hook_menu().
  */
 function ajax_example_menu() {
   $items = array();
@@ -108,7 +110,7 @@ function ajax_example_menu() {
     'file' => 'ajax_example_graceful_degradation.inc',
   );
   // The  above example as it appears to users with no javascript.
-  $items['ajax_example/dynamic_sections_no_js'] = array(
+  $items['examples/ajax_example/dynamic_sections_no_js'] = array(
     'title' => 'Dynamic Sections w/JS turned off',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ajax_example_dynamic_sections', TRUE),
@@ -192,7 +194,51 @@ function ajax_example_menu() {
     'page arguments' => array('ajax_example_advanced_commands'),
     'access callback' => TRUE,
     'file' => 'ajax_example_advanced.inc',
+    'weight' => 100,
+  );
+
+  // Autocomplete examples.
+  $items['examples/ajax_example/simple_autocomplete'] = array(
+    'title' => 'Autocomplete (simple)',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ajax_example_simple_autocomplete'),
+    'access arguments' => array('access user profiles'),
+    'file' => 'ajax_example_autocomplete.inc',
     'weight' => 10,
+  );
+  $items['examples/ajax_example/simple_user_autocomplete_callback'] = array(
+    'page callback' => 'ajax_example_simple_user_autocomplete_callback',
+    'file' => 'ajax_example_autocomplete.inc',
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('access user profiles'),
+  );
+  $items['examples/ajax_example/node_autocomplete'] = array(
+    'title' => 'Autocomplete (node with nid)',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ajax_example_unique_autocomplete'),
+    'access arguments' => array('access content'),
+    'file' => 'ajax_example_autocomplete.inc',
+    'weight' => 11,
+  );
+  $items['examples/ajax_example/unique_node_autocomplete_callback'] = array(
+    'page callback' => 'ajax_example_unique_node_autocomplete_callback',
+    'file' => 'ajax_example_autocomplete.inc',
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('access content'),
+  );
+  $items['examples/ajax_example/node_by_author'] = array(
+    'title' => 'Autocomplete (node limited by author)',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ajax_example_node_by_author_autocomplete'),
+    'access callback' => TRUE,
+    'file' => 'ajax_example_autocomplete.inc',
+    'weight' => 12,
+  );
+  $items['examples/ajax_example/node_by_author_autocomplete'] = array(
+    'page callback' => 'ajax_example_node_by_author_node_autocomplete_callback',
+    'file' => 'ajax_example_autocomplete.inc',
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('access content'),
   );
 
   return $items;
@@ -202,11 +248,6 @@ function ajax_example_intro() {
   $markup = t('The AJAX example module provides many examples of AJAX including forms, links, and AJAX commands.');
   return $markup;
 }
-
-/**
- * @ingroup ajax_examples
- * @{
- */
 
 /**
  * Simple form whose ajax-enabled 'changethis' member causes a text change
@@ -528,7 +569,8 @@ function _ajax_example_get_first_dropdown_options() {
  * Helper function to populate the second dropdown. This would normally be
  * pulling data from the database.
  *
- * @param key. This will determine which set of options is returned.
+ * @param $key
+ *   This will determine which set of options is returned.
  *
  * @return array of options
  */
@@ -546,4 +588,6 @@ function _ajax_example_get_second_dropdown_options($key = '') {
     return array();
   }
 }
-
+/**
+ * @} End of "defgroup ajax_example".
+ */

@@ -2,12 +2,18 @@
 
 /**
  * @file
+ * Module file for simpletest_example
+ */
+
+/**
+ * @defgroup simpletest_example Example: Simpletest
+ * @ingroup examples
+ * @{
  * An example of simpletest tests to accompany the tutorial at
  * http://drupal.org/node/890654.
  *
  * This is built on a traditional node-type implementation.
  */
-
 
 /**
  * Implements hook_node_info().
@@ -16,7 +22,6 @@ function simpletest_example_node_info() {
   return array(
     'simpletest_example' => array(
       'name' => t('Simpletest Example Node Type'),
-      'module' => 'simpletest_example',
       'base' => 'simpletest_example',
       'description' => t('simpletest_example page node type.'),
   )
@@ -87,7 +92,7 @@ function simpletest_example_form($node, $form_state) {
 /**
  * Implements hook_menu().
  *
- * Provide an explanation.
+ * Provides an explanation.
  */
 function simpletest_example_menu() {
   $items['examples/simpletest_example'] = array(
@@ -100,7 +105,7 @@ function simpletest_example_menu() {
 }
 
 /**
- * Return an explanation of this module.
+ * Returns an explanation of this module.
  */
 function _simpletest_example_explanation() {
 
@@ -109,3 +114,18 @@ function _simpletest_example_explanation() {
   return $explanation;
 }
 
+/**
+ * A simple self-contained function used to demonstrate unit tests.
+ *
+ * @see SimpletestUnitTestExampleTestCase
+ */
+function simpletest_example_empty_mysql_date($date_string) {
+  if (empty($date_string) || $date_string == '0000-00-00' || $date_string == '0000-00-00 00:00:00') {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * @} End of "defgroup simpletest_example".
+ */

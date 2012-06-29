@@ -25,7 +25,7 @@ class TokenExampleTestCase extends DrupalWebTestCase {
 
   function testInterface() {
     $filtered_id = db_query("SELECT format FROM {filter_format} WHERE name = 'Filtered HTML'")->fetchField();
-    $plain_id = db_query("SELECT format FROM {filter_format} WHERE name = 'Plain text'")->fetchField();
+    $default_format_id = filter_default_format($this->web_user);
 
     $this->drupalGet('examples/token');
     $this->assertNoFieldByName('node');
@@ -45,7 +45,6 @@ class TokenExampleTestCase extends DrupalWebTestCase {
       ->execute();
 
     $this->drupalGet('examples/token');
-    $this->assertFieldByName('node');
 
     $edit = array(
       'text' => 'Would you like to view the [node:type-name] [node:title] with text format [node:body-format] (ID [node:body-format:id])?',
@@ -58,6 +57,6 @@ class TokenExampleTestCase extends DrupalWebTestCase {
       'text' => 'Your default text format is [default-format:name] (ID [default-format:id]).',
     );
     $this->drupalPost(NULL, $edit, t('Submit'));
-    $this->assertText('Your default text format is Plain text (ID ' . $plain_id . ')');
+    $this->assertText('Your default text format is Filtered HTML (ID ' . $default_format_id . ')');
   }
 }

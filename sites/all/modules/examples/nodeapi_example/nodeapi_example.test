@@ -6,7 +6,6 @@
  *
  * This file contains the test cases to check if module is performing as
  * expected.
- *
  */
 class NodeApiExampleTestCase extends DrupalWebTestCase {
   /**
@@ -30,7 +29,7 @@ class NodeApiExampleTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * Enable modules and create user with specific permissions.
+   * Enables modules and create user with specific permissions.
    */
   function setUp() {
     parent::setUp('nodeapi_example');
@@ -49,7 +48,7 @@ class NodeApiExampleTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * Login user, create an example node, and use the rating system
+   * Log user in, creates an example node, and uses the rating system.
    */
   function testNodeExampleBasic() {
 
@@ -66,11 +65,11 @@ class NodeApiExampleTestCase extends DrupalWebTestCase {
 
     // Check if the new Rating options appear in the settings page
     $this->assertText(t('NodeAPI Example Rating'), t('Rating options found in content type.'));
-    $this->assertFieldByName('nodeapi_example', 1, t('Rating is Disabled by default.'));
+    $this->assertFieldByName('nodeapi_example_node_type', 1, t('Rating is Disabled by default.'));
 
     // Disable the rating for this content type: 0 for Disabled, 1 for Enabled.
     $content_settings = array(
-      'nodeapi_example' => 0,
+      'nodeapi_example_node_type' => 0,
     );
     $this->drupalPost('admin/structure/types/manage/' . $type, $content_settings, t('Save content type'));
     $this->assertResponse(200);
@@ -92,7 +91,7 @@ class NodeApiExampleTestCase extends DrupalWebTestCase {
 
     // Enable the rating for this content type: 0 for Disabled, 1 for Enabled.
     $content_settings = array(
-      'nodeapi_example' => TRUE,
+      'nodeapi_example_node_type' => TRUE,
     );
     $this->drupalPost('admin/structure/types/manage/' . $type, $content_settings, t('Save content type'));
     $this->assertResponse(200);
@@ -116,7 +115,7 @@ class NodeApiExampleTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * Login user, create an example node, and test rating functionality with
+   * Logs user in, creates an example node, and tests rating functionality with
    * a node using revisions.
    */
   function testNodeExampleRevision() {
@@ -134,11 +133,11 @@ class NodeApiExampleTestCase extends DrupalWebTestCase {
 
     // Check if the new Rating options appear in the settings page
     $this->assertText(t('NodeAPI Example Rating'), t('Rating options found in content type.'));
-    $this->assertFieldByName('nodeapi_example', 1, t('Rating is Disabled by default.'));
+    $this->assertFieldByName('nodeapi_example_node_type', 1, t('Rating is Disabled by default.'));
 
     // Disable the rating for this content type: 0 for Disabled, 1 for Enabled.
     $content_settings = array(
-      'nodeapi_example' => 0,
+      'nodeapi_example_node_type' => 0,
     );
     $this->drupalPost('admin/structure/types/manage/' . $type, $content_settings, t('Save content type'));
     $this->assertResponse(200);
@@ -160,7 +159,7 @@ class NodeApiExampleTestCase extends DrupalWebTestCase {
 
     // Enable the rating for this content type: 0 for Disabled, 1 for Enabled.
     $content_settings = array(
-      'nodeapi_example' => TRUE,
+      'nodeapi_example_node_type' => TRUE,
     );
     $this->drupalPost('admin/structure/types/manage/' . $type, $content_settings, t('Save content type'));
     $this->assertResponse(200);
